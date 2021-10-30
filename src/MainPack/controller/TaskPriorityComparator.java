@@ -13,9 +13,9 @@ public class TaskPriorityComparator implements Comparator<Task>{
 	 */
 	@Override
 	public int compare(Task o1, Task o2) {
-		if(o1.getRank() < o2.getRank()) {
+		if(o1.getRank() > o2.getRank()) {
 			return -1;
-		}else if (o1.getRank() > o2.getRank()) {
+		}else if (o1.getRank() < o2.getRank()) {
 			return 1;
 		}
 		return 0;

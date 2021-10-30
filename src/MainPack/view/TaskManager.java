@@ -25,6 +25,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import com.mindfusion.scheduling.Calendar;
+import com.mindfusion.scheduling.model.ResourceList;
 
 import MainPack.controller.TaskController;
 import MainPack.model.MainCategory;
@@ -33,14 +34,13 @@ import MainPack.model.Task;
 
 public class TaskManager extends JPanel {
 
-	//public Vector<Task> TaskVec = new Vector<Task>();
-//	public Vector<MainCategory> MainVec = new Vector<MainCategory>();
-//	public Vector<SubCategory> SubVec = new Vector<SubCategory>();
+	
 	private JTextField txtTaskManager;
 	public JScrollPane TMList;
 
 	private TaskController taskController;
 	private Cal cal;
+
 	/**
 	 * Create the panel.
 	 */
@@ -53,46 +53,42 @@ public class TaskManager extends JPanel {
 		txtTaskManager.setHorizontalAlignment(SwingConstants.CENTER);
 		txtTaskManager.setText("Task Manager");
 		txtTaskManager.setColumns(10);
-		TMList = new JScrollPane(); 
-		
+		TMList = new JScrollPane();
 
-		Render();
-		
+	//	Render();
 
 		VecsStrings(taskController.getMainCategories(), taskController.getSubCategories());
-		
+
 		GroupLayout groupLayout = new GroupLayout(this);
-		groupLayout.setHorizontalGroup(
-			groupLayout.createParallelGroup(Alignment.TRAILING)
+		groupLayout
+				.setHorizontalGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+						.addGroup(groupLayout.createSequentialGroup().addContainerGap()
+								.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+										.addComponent(TMList, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 430,
+												Short.MAX_VALUE)
+										.addComponent(txtTaskManager, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 430,
+												Short.MAX_VALUE))
+								.addContainerGap()));
+		groupLayout.setVerticalGroup(groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addContainerGap()
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(TMList, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE)
-						.addComponent(txtTaskManager, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE))
-					.addContainerGap())
-		);
-		groupLayout.setVerticalGroup(
-			groupLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(groupLayout.createSequentialGroup()
-					.addComponent(txtTaskManager, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addComponent(TMList, GroupLayout.PREFERRED_SIZE, 509, GroupLayout.PREFERRED_SIZE)
-					.addContainerGap(56, Short.MAX_VALUE))
-		);
+						.addComponent(txtTaskManager, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.PREFERRED_SIZE)
+						.addPreferredGap(ComponentPlacement.RELATED)
+						.addComponent(TMList, GroupLayout.PREFERRED_SIZE, 509, GroupLayout.PREFERRED_SIZE)
+						.addContainerGap(56, Short.MAX_VALUE)));
 		setLayout(groupLayout);
 
 	}
 
 	/**
-	 * // returns a model of all
-	 * cetogris names. --NEED TO
-	 * ADD IT TO THE APPROPRIATE
+	 * // returns a model of all cetogris names. --NEED TO ADD IT TO THE APPROPRIATE
 	 * BUTTONS
 	 * (https://stackoverflow.com/questions/7387299/dynamically-adding-items-to-a-jcombobox)
+	 * 
 	 * @param mainVec2
 	 * @param subVec2
 	 */
-	public void VecsStrings(Vector<MainCategory> mainVec2, Vector<SubCategory> subVec2) { 
+	public void VecsStrings(Vector<MainCategory> mainVec2, Vector<SubCategory> subVec2) {
 		// TODO function returns a string vector of mainVec and subVec to the jcomboBox
 
 		Vector back = new Vector();
@@ -108,50 +104,51 @@ public class TaskManager extends JPanel {
 		// return model;
 	}
 
-	public void Render() { // re-Creating list tree of all elements; deletes all first! --Still deosnt
+	public void Render(Cal day) { // re-Creating list tree of all elements; deletes all first! --Still deosnt
 							// work, needs a fix! might be a problem with returning type - not likly tho
-		 //TMList.removeAll();
-		// for (int i = 0; i < MainVec.size(); i++)
-		// System.out.println(MainVec.get(i).title + "render"); //TESTING
-		//Vector<MainCategory> mainVec = new Vector<>();
-		//Vector<SubCategory> subVec = new Vector<>();
-		//Vector<Task> mainVec1 = new Vector<>();
 		
-		 //TMList = new JScrollPane(new treeItem().makeUI(TaskController.getInstance().getMainCategories(), TaskController.getInstance().getSubCategories(), TaskController.getInstance().getTasks()));
-		 
-		 TMList.setViewportView(new treeItem().makeUI(TaskController.getInstance().getMainCategories(), TaskController.getInstance().getSubCategories(), TaskController.getInstance().getRootTasks()));
-		 //TMList.revalidate();
-		 //TMList.repaint();
+		TaskController.getInstance().sortTasks();
+		TMList.setViewportView(
+			new treeItem().makeUI(
+				TaskController.getInstance().getMainCategories(),
+				TaskController.getInstance().getRootTasks()
+			)
+		);
+		Vector<Task> tasks = taskController.getSortedTasks();
+		
+		day.getCalender().getSchedule().getItems().clear();
+		for(Task t : tasks) {
+			if(!t.getIsComplete())
+			day.addAppointment(t);
+		}
+		
+		
+		// TMList.revalidate();
+		// TMList.repaint();
 		// TMList.add(new treeItem().makeUI(MainVec, SubVec, TaskVec)); //create the
 		// tree and return it within a jScrollPanel
 		// new JTree().add(MainVec.get(i).title, MainVec.get(i))
 	}
 
 	public void UpdateAddButtonList() {
-		
+
 		// update jcombo box to all the categories
 	}
 
 	public boolean AddMainCategoryToVector(String mainName) {
 
-		if(taskController.mainCategoryExists(mainName)) {
+		if (taskController.mainCategoryExists(mainName)) {
 			showMessageDialog(null, "category Name already exist, Please choose a different name");
 			return false;
 		}
 		taskController.addMainCategory(new MainCategory(mainName));
 		showMessageDialog(null, "Item added!");
 		return true;
-		
+
 	}
 
 	public void AddSubCategoryToVector(SubCategory tmp) {
 		taskController.addSubCategory(tmp);
-	}
-
-	public void AddTaskToTaskVector(Task task) {
-
-		taskController.addTask(task);
-		cal.addAppointment(task);
 	}
 
 	public void NewTask(Task tmp) {
@@ -181,7 +178,8 @@ public class TaskManager extends JPanel {
 			for (int i = 0; i < size; i++) {
 				super.addElement(items.elementAt(i));
 			}
-			setSelectedItem(items.elementAt(0));
+			if(!items.isEmpty())
+				setSelectedItem(items.elementAt(0));
 		}
 
 		@Override
@@ -263,14 +261,13 @@ public class TaskManager extends JPanel {
 		}
 
 	}
-	
-	public class AddTaskHandler implements ActionListener{
+
+	public class AddTaskHandler implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			
-			
+
 		}
-		
+
 	}
 }

@@ -32,7 +32,7 @@ import MainPack.model.Task;
 //for all note purposes cat == Category
 public class treeItem {
 	
-	public JComponent makeUI(Vector<MainCategory> mains, Vector<SubCategory> subs, Vector<Task> tasks) { //init the ceration of the elements -- 
+	public JComponent makeUI(Vector<MainCategory> mains,Vector<Task> tasks) { //Render the ceration of the elements -- 
 	  // for (int i = 0; i < mains.size(); i++) System.out.println(mains.get(i).title + "treeItem"); // TESTING 
 	
 		IconUIResource emptyIcon = new IconUIResource(new Icon() {
@@ -58,7 +58,7 @@ public class treeItem {
 	      }
 	    });
 	
-	    JTree tree = new JTree(makeModel(mains, subs, tasks)); //create the treeRoot and add all categories(main/sub) and tasks.
+	    JTree tree = new JTree(makeModel(mains,tasks)); //create the treeRoot and add all categories(main/sub) and tasks.
 	    tree.setCellRenderer(new DefaultTreeCellRenderer());
 	    //tree.setRowHeight(0);
 	    tree.setRootVisible(false);
@@ -77,7 +77,7 @@ public class treeItem {
 	   * @param tasks
 	   * @return
 	   */
-	  private TreeModel makeModel(Vector<MainCategory> mains, Vector<SubCategory> subs, Vector<Task> tasks) {
+	  private TreeModel makeModel(Vector<MainCategory> mains, Vector<Task> tasks) {
 		//   for (int i = 0; i < mains.size(); i++) System.out.println(mains.get(i).title +"TreeModel"); // TESTING -- GOT HERE
 	  	Dimension d64 = new Dimension(64, 64);
 	    Dimension d32 = new Dimension(32, 32);
@@ -85,7 +85,6 @@ public class treeItem {
 	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
 	    
 
-		    
 	    for(MainCategory mainCat : mains) {
 	    	DefaultMutableTreeNode setMain = new DefaultMutableTreeNode(
 	    			new TestNode(mainCat.getTitle(), Color.ORANGE, d64, true));
@@ -98,7 +97,6 @@ public class treeItem {
 						new TestNode(task.getTitle(), Color.RED, d24, false));
 	    			setSub.add(setTask);
 	    		}
-				System.out.println(setSub.toString() + " setSub");// --TESTING 
 				setMain.add(setSub);
 	    	}
     		for(Task task : mainCat.getTasks()) {
@@ -106,11 +104,14 @@ public class treeItem {
 					new TestNode(task.getTitle(), Color.RED, d24, false));
     			setMain.add(setTask);
     		}
-	    	root.add(setMain);
+        	root.add(setMain);
 	    }
+	    for(Task task: tasks) {
+			DefaultMutableTreeNode setTask = new DefaultMutableTreeNode(
+					new TestNode(task.getTitle(), Color.BLACK, d64, true));
+			root.add(setTask);
+		}
 	    
-
-
 	    return new DefaultTreeModel(root); 
 	}
 

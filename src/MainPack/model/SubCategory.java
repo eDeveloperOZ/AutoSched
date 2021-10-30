@@ -14,12 +14,18 @@ public class SubCategory extends MainCategory{
 		super(t);
 		this.mainCategory = mainCategory;
 	}
-	
+	public SubCategory(int id, MainCategory mainCategory, String t) {
+
+		super(id, t);
+		this.mainCategory = mainCategory;
+	}
 	public void CreateTask() 
 	{
 		
 	}
-	
+	public MainCategory getMainCategory() {
+		return mainCategory;
+	}
 	public void addTask(Task task) {
 		tasks.add(task);
 	}

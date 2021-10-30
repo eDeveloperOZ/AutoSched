@@ -23,21 +23,10 @@ public class Task implements Comparable<Task>{
 	
 	protected static int idGenerator = 1;
 	
-
 	
-	public Task(MainCategory cat, String title, DateTime deadLine, boolean importance, boolean urgency) {
-		this(cat, title, deadLine, TaskType.REGULAR, 15, 5, importance, urgency);
-		this.isComplete = false; 
-		
-		this.rank = 25;  
-	}
-	
-	
-			
 	public Task(MainCategory category, String title, DateTime deadLine, TaskType taskType, int duration, int scale, boolean importance, boolean urgency) {
 		this.taskType = taskType;
-		this.StartingTime = deadLine; // Delete this! it is not true.
-
+		this.StartingTime = new DateTime(1,1,1).now(); // Delete this! it is not true : CHANGED 
 		this.isComplete = false; 
 		this.category = category;
 		this.title = title;
@@ -93,6 +82,9 @@ public class Task implements Comparable<Task>{
 	public boolean isComplete() {
 		return isComplete;
 	}
+	public void setStartingTime(DateTime startTime) {
+		this.StartingTime = startTime; 
+	}
 
 	public DateTime getStartingTime() {
 		return StartingTime;
@@ -133,5 +125,18 @@ public class Task implements Comparable<Task>{
 		}
 		else 
 			return	0;
+	}
+
+
+
+	public void setIsComplete(boolean b) {
+		this.isComplete = b;
+	}
+
+
+
+	public boolean getIsComplete() {
+		// TODO Auto-generated method stub
+		return isComplete;
 	}
 }

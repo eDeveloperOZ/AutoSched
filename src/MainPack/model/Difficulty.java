@@ -4,10 +4,7 @@ public class Difficulty {
 	private int Duration;  //integer in minutes 
 	private int scale; // how hard is the task from 1-10 - default is 5; 
 
-	Difficulty(){
-		this.Duration = 45; 
-		this.scale = 5; 
-	}
+	
 	
 	Difficulty(int min, int H, int scl){
 		this.Duration = ParseDurationTime(min, H); 

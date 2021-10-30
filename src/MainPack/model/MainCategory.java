@@ -18,13 +18,17 @@ public class MainCategory {
 		idGenerator++;
 	}
 
-	
+	public MainCategory(int id, String title) {
+		this.id = id;
+		this.title = title;
+		idGenerator++;
+	}
 	public void add(SubCategory subCategory) {
 		subCategories.add(subCategory);
 	}
 	
 	public void add(Task task) {
-		tasks.add(task);
+		this.tasks.add(task);
 	}
 	
 	public List<Task> getTasks(){
@@ -48,7 +52,7 @@ public class MainCategory {
 		return title;
 	}
 	
-	public int compareTo(MainCategory other) { // AMIT: what does that do!? why returning integers?
+	public int compareTo(MainCategory other) { 
 		if(getTitle().compareTo(other.getTitle())>0)
 		{
 			return	1;

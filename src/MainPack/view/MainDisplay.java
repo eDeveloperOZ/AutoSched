@@ -7,6 +7,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Vector;
 
 import javax.swing.GroupLayout;
@@ -56,21 +58,6 @@ public class MainDisplay {
 	private JSpinner spnTaskDeadLine;
 	private JComboBox cbxTaskCategory;
 
-//	/**
-//	 * Launch the application.
-//	 */
-//	public static void main(String[] args) {
-//		EventQueue.invokeLater(new Runnable() {
-//			public void run() {
-//				try {
-//					MainDisplay window = new MainDisplay();
-//					window.Display.setVisible(true);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		});
-//	}
 
 	/**
 	 * Create the application.
@@ -80,13 +67,9 @@ public class MainDisplay {
 		this.taskController = TaskController.getInstance();
 		day = Cal.getInstance(); 
 		tManager = new TaskManager();
-		System.out.println("here");
-		tManager.Render();
+		tManager.Render(day);
 		initialize();
-		Vector<Task> tasks = taskController.getSortedTasks();
-		for(Task t : tasks) {
-			day.addAppointment(t);
-		}
+		
 	//	tManager.Render();
 		Display.setVisible(true);
 	}
@@ -199,8 +182,13 @@ public class MainDisplay {
 					.addComponent(ControlPanel, GroupLayout.PREFERRED_SIZE, 223, GroupLayout.PREFERRED_SIZE)
 					.addContainerGap())
 		);
+		Display.addWindowListener(new WindowAdapter() {
+		    public void windowClosing(WindowEvent e) {
+		         taskController.Save(); 
+		    }
+		});
 		
-		JButton btnAddTask = new JButton("Add Task");
+		JButton btnAddTask = new JButton("Add a Task");
 		btnAddTask.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -210,19 +198,29 @@ public class MainDisplay {
 				int duration =  (Integer)(spnDuration.getValue());
 				boolean importancy =  chkTaskImportancy.isSelected() ;
 				boolean urgetncy =  chkTaskUrgent.isSelected();
-				System.out.println("new date time" + spnTaskDeadLine.getValue().toString());
 				Date deadlineDate = (Date)spnTaskDeadLine.getValue();
 				DateTime deadLine = new DateTime(deadlineDate) ;  
+				System.out.println(deadLine.toString());
 				MainCategory cat = taskController.getRootCategory();
 				if(cbxTaskCategory.getSelectedItem() != null) {
 					cat = (MainCategory)cbxTaskCategory.getSelectedItem(); 
 				}
-				System.out.println(cat);
+				txtTaskTitle.setText("");
+				cbxTaskType.setSelectedIndex(0);
+				spnTaskScale.setValue(5);
+				spnDuration.setValue(0);
+				chkTaskImportancy.setSelected(false);
+				chkTaskUrgent.setSelected(false);
+				Date now = new Date();
+				spnTaskDeadLine.setModel(new SpinnerDateModel(now, null, null, Calendar.DAY_OF_YEAR));
+				cbxTaskCategory.setSelectedIndex(0);
 
 				//TODO create a new Task instance
 
 				Task task = taskController.addTask(cat, title, type, scale, duration, importancy, urgetncy, deadLine);
-				Cal.getInstance().addAppointment(task);
+				//Cal.getInstance().addAppointment(task);
+				
+				tManager.Render(day);
 				
 				//TODO refresh tree
 				//TODO refresh calendar				//TODO create a new Task instance
@@ -235,26 +233,27 @@ public class MainDisplay {
 			}
 		});
 		
-		JLabel lblNewLabel = new JLabel("Task Title");
+		JLabel lblNewLabel = new JLabel("Title");
 		
 		txtTaskTitle = new JTextField();
 		txtTaskTitle.setColumns(10);
 		
 		cbxTaskType = new JComboBox();
-		cbxTaskType.setModel(new DefaultComboBoxModel(new String[] {"Anchor ", "Habit ", "Regular"}));
+		cbxTaskType.setModel(new DefaultComboBoxModel(new String[] {"REGULAR", "HABIT", "ANCHORE"}));
 		
 		spnTaskScale = new JSpinner();
 		spnTaskScale.setModel(new SpinnerNumberModel(5, 1, 10, 1));
 		
 		 spnDuration = new JSpinner();
-		spnDuration.setModel(new SpinnerNumberModel(0, 0, 240, 15));
+		spnDuration.setModel(new SpinnerNumberModel(15, 15, 240, 15));
 		
 		 chkTaskImportancy = new JCheckBox("Important");
 		
 		 chkTaskUrgent = new JCheckBox("Urgent");
 		
 		 spnTaskDeadLine = new JSpinner();
-		 spnTaskDeadLine.setModel(new SpinnerDateModel(new Date(1635109200000L), null, null, Calendar.DAY_OF_YEAR));
+		 Date now = new Date();
+		 spnTaskDeadLine.setModel(new SpinnerDateModel(now, null, null, Calendar.DAY_OF_YEAR));
 		
 		JLabel lblTaskType = new JLabel("Task Type");
 		
@@ -264,20 +263,30 @@ public class MainDisplay {
 		
 		JLabel lblDeadline = new JLabel("Deadline");
 		
-		ArrayList<MainCategory> categories	 = new ArrayList<>();
-		categories.add(taskController.getRootCategory());
-		categories.addAll(taskController.getSubCategories());
-		JComboBox cbxTaskCategory = new JComboBox(categories.toArray());
+		
+		cbxTaskCategory = new JComboBox(TaskController.getInstance().getAllCategories());
 		
 		JLabel lblCategory = new JLabel("Category");
+		
+		JLabel lblNewLabel_1 = new JLabel("Another one to do?? -->>");
+		
+		JComboBox cbxDoneTasks = new JComboBox(TaskController.getInstance().getSortedTasks());
+		
+		JButton btnDoneTask = new JButton("This one's DONE!");
+		btnDoneTask.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				String taskToRemove = cbxDoneTasks.getSelectedItem().toString(); 
+				TaskController.getInstance().completedTask(taskToRemove);
+				tManager.Render(day);
+			}
+		});
+		
+		JLabel lblNewLabel_4 = new JLabel("Finished a Task? tell us!");
 		GroupLayout gl_UserPanel = new GroupLayout(UserPanel);
 		gl_UserPanel.setHorizontalGroup(
-			gl_UserPanel.createParallelGroup(Alignment.LEADING)
+			gl_UserPanel.createParallelGroup(Alignment.TRAILING)
 				.addGroup(gl_UserPanel.createSequentialGroup()
-					.addContainerGap(369, Short.MAX_VALUE)
-					.addComponent(btnAddTask)
-					.addContainerGap())
-				.addGroup(Alignment.TRAILING, gl_UserPanel.createSequentialGroup()
 					.addContainerGap()
 					.addGroup(gl_UserPanel.createParallelGroup(Alignment.LEADING)
 						.addComponent(lblNewLabel, GroupLayout.PREFERRED_SIZE, 48, GroupLayout.PREFERRED_SIZE)
@@ -300,21 +309,32 @@ public class MainDisplay {
 									.addGroup(gl_UserPanel.createSequentialGroup()
 										.addComponent(spnDuration, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
 										.addContainerGap())
-									.addGroup(gl_UserPanel.createParallelGroup(Alignment.LEADING)
-										.addGroup(gl_UserPanel.createSequentialGroup()
-											.addComponent(spnTaskScale, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-											.addContainerGap())
-										.addGroup(gl_UserPanel.createSequentialGroup()
-											.addComponent(cbxTaskType, 0, 115, Short.MAX_VALUE)
-											.addGap(259))))))
-						.addGroup(gl_UserPanel.createSequentialGroup()
-							.addComponent(txtTaskTitle, GroupLayout.PREFERRED_SIZE, 166, GroupLayout.PREFERRED_SIZE)
-							.addContainerGap())
-						.addGroup(gl_UserPanel.createSequentialGroup()
-							.addGroup(gl_UserPanel.createParallelGroup(Alignment.TRAILING, false)
-								.addComponent(cbxTaskCategory, Alignment.LEADING, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-								.addComponent(spnTaskDeadLine, Alignment.LEADING))
-							.addContainerGap())))
+									.addGroup(gl_UserPanel.createSequentialGroup()
+										.addGroup(gl_UserPanel.createParallelGroup(Alignment.LEADING)
+											.addGroup(gl_UserPanel.createSequentialGroup()
+												.addComponent(cbxTaskType, 0, 115, Short.MAX_VALUE)
+												.addGap(96))
+											.addGroup(gl_UserPanel.createSequentialGroup()
+												.addComponent(spnTaskScale, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+												.addGap(172))
+											.addComponent(txtTaskTitle, GroupLayout.PREFERRED_SIZE, 123, GroupLayout.PREFERRED_SIZE))
+										.addPreferredGap(ComponentPlacement.RELATED)
+										.addGroup(gl_UserPanel.createParallelGroup(Alignment.LEADING)
+											.addComponent(cbxDoneTasks, GroupLayout.PREFERRED_SIZE, 125, GroupLayout.PREFERRED_SIZE)
+											.addComponent(lblNewLabel_4)
+											.addGroup(gl_UserPanel.createParallelGroup(Alignment.TRAILING)
+												.addComponent(btnAddTask)
+												.addComponent(btnDoneTask)))
+										.addGap(80)))))
+						.addGroup(gl_UserPanel.createParallelGroup(Alignment.LEADING)
+							.addGroup(gl_UserPanel.createSequentialGroup()
+								.addGroup(gl_UserPanel.createParallelGroup(Alignment.TRAILING, false)
+									.addComponent(cbxTaskCategory, Alignment.LEADING, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+									.addComponent(spnTaskDeadLine, Alignment.LEADING, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+								.addGap(179))
+							.addGroup(Alignment.TRAILING, gl_UserPanel.createSequentialGroup()
+								.addComponent(lblNewLabel_1)
+								.addGap(75)))))
 		);
 		gl_UserPanel.setVerticalGroup(
 			gl_UserPanel.createParallelGroup(Alignment.TRAILING)
@@ -322,15 +342,18 @@ public class MainDisplay {
 					.addContainerGap()
 					.addGroup(gl_UserPanel.createParallelGroup(Alignment.BASELINE)
 						.addComponent(txtTaskTitle, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblNewLabel))
+						.addComponent(lblNewLabel)
+						.addComponent(lblNewLabel_4))
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_UserPanel.createParallelGroup(Alignment.BASELINE)
 						.addComponent(cbxTaskType, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblTaskType))
+						.addComponent(lblTaskType)
+						.addComponent(cbxDoneTasks, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_UserPanel.createParallelGroup(Alignment.BASELINE)
 						.addComponent(spnTaskScale, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblScale))
+						.addComponent(lblScale)
+						.addComponent(btnDoneTask))
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_UserPanel.createParallelGroup(Alignment.BASELINE)
 						.addComponent(spnDuration, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -347,8 +370,10 @@ public class MainDisplay {
 					.addGroup(gl_UserPanel.createParallelGroup(Alignment.LEADING)
 						.addGroup(gl_UserPanel.createSequentialGroup()
 							.addComponent(cbxTaskCategory, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-							.addPreferredGap(ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
-							.addComponent(btnAddTask))
+							.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+							.addGroup(gl_UserPanel.createParallelGroup(Alignment.BASELINE)
+								.addComponent(lblNewLabel_1, GroupLayout.PREFERRED_SIZE, 21, GroupLayout.PREFERRED_SIZE)
+								.addComponent(btnAddTask)))
 						.addComponent(lblCategory))
 					.addContainerGap())
 		);
@@ -365,7 +390,7 @@ public class MainDisplay {
 				taskController.addMainCategory(newMain);
 				 
 				txtAddMain.setText("");
-				tManager.Render();
+				tManager.Render(day);
 				
 				//tManager.treeList = new JTree();
 				 //DefaultTreeModel model = (DefaultTreeModel)  tManager.treeList.getModel();
@@ -400,23 +425,16 @@ public class MainDisplay {
 		JButton AddSubCatButton = new JButton("Add Sub Category");
 		AddSubCatButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				for(SubCategory tmp: TaskController.getInstance().getSubCategories()) {
-					System.out.println(tmp.getTitle());
-					System.out.println("first");
-				}
-				String catName; 
-				String mainName; 
-				mainName = cbxMainCateogory.getSelectedItem().toString(); 
-				catName = txtAddSub.getText();
-				MainCategory mainOfSub = new MainCategory(mainName); 
-				SubCategory newSub = new SubCategory(mainOfSub,catName); 
-				taskController.addSubCategory(newSub);
-				 
+				
+				String catName = txtAddSub.getText();
+				String mainName  = cbxMainCateogory.getSelectedItem().toString(); 
+				//MainCategory mainOfSub = new MainCategory(mainName); 
+				//SubCategory newSub = new SubCategory(mainOfSub,catName); 
+				taskController.addSubCategory(catName,mainName);
+				
 				txtAddSub.setText("");
-				tManager.Render();
-				for(SubCategory tmp: TaskController.getInstance().getSubCategories()) {
-					System.out.println(tmp.getTitle());
-				}
+				tManager.Render(day);
+				
 			}
 		});
 		
@@ -427,26 +445,54 @@ public class MainDisplay {
 		txtAddSub.setColumns(10);
 		
 		cbxMainCateogory = new JComboBox(TaskController.getInstance().getMainCategories());
+		
+		JButton btnNewButton = new JButton("Fix me up!");
+		btnNewButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				tManager.Render(day);
+			}
+		});
+		
+		JLabel lblNewLabel_2 = new JLabel("Where should I begin!?");
+		
+		JLabel lblNewLabel_3 = new JLabel("Try not to add more then 4");
 		GroupLayout gl_ControlPanel = new GroupLayout(ControlPanel);
 		gl_ControlPanel.setHorizontalGroup(
-			gl_ControlPanel.createParallelGroup(Alignment.LEADING)
+			gl_ControlPanel.createParallelGroup(Alignment.TRAILING)
 				.addGroup(gl_ControlPanel.createSequentialGroup()
 					.addGap(33)
-					.addGroup(gl_ControlPanel.createParallelGroup(Alignment.TRAILING, false)
-						.addComponent(txtAddMain, Alignment.LEADING)
-						.addComponent(AddMainCatButton, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-					.addGap(18)
+					.addGroup(gl_ControlPanel.createParallelGroup(Alignment.LEADING)
+						.addGroup(gl_ControlPanel.createParallelGroup(Alignment.TRAILING, false)
+							.addComponent(txtAddMain, Alignment.LEADING)
+							.addComponent(AddMainCatButton, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+						.addComponent(lblNewLabel_3))
+					.addGap(50)
 					.addGroup(gl_ControlPanel.createParallelGroup(Alignment.TRAILING, false)
 						.addComponent(cbxMainCateogory, Alignment.LEADING, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 						.addComponent(txtAddSub, Alignment.LEADING)
 						.addComponent(AddSubCatButton, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 					.addContainerGap(159, Short.MAX_VALUE))
+				.addGroup(gl_ControlPanel.createSequentialGroup()
+					.addContainerGap(193, Short.MAX_VALUE)
+					.addComponent(btnNewButton)
+					.addGap(180))
+				.addGroup(gl_ControlPanel.createSequentialGroup()
+					.addContainerGap(184, Short.MAX_VALUE)
+					.addComponent(lblNewLabel_2)
+					.addGap(167))
 		);
 		gl_ControlPanel.setVerticalGroup(
 			gl_ControlPanel.createParallelGroup(Alignment.TRAILING)
 				.addGroup(gl_ControlPanel.createSequentialGroup()
-					.addContainerGap(130, Short.MAX_VALUE)
-					.addComponent(cbxMainCateogory, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(40, Short.MAX_VALUE)
+					.addComponent(lblNewLabel_2)
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(btnNewButton)
+					.addGap(42)
+					.addGroup(gl_ControlPanel.createParallelGroup(Alignment.BASELINE)
+						.addComponent(cbxMainCateogory, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+						.addComponent(lblNewLabel_3))
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_ControlPanel.createParallelGroup(Alignment.BASELINE)
 						.addComponent(txtAddMain, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
@@ -469,5 +515,11 @@ public class MainDisplay {
 //		tManager.Render();
 //		tManager.VecsStrings(taskController.getMainCategories(), taskController.getSubCategories()); 
 
+	}
+
+	private void addWindowListener(WindowAdapter windowAdapter) {
+		// TODO Auto-generated method stub
+		System.out.println("getting out");
+		
 	}
 }
